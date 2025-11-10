@@ -20,7 +20,8 @@
             query, 
             where, 
             orderBy, 
-            serverTimestamp 
+            serverTimestamp,
+            getDocs
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { 
             getAuth, 
@@ -196,7 +197,14 @@
                 return;
             }
 
-            chats.forEach(chat => {
+            // Сортируем чаты по времени последнего сообщения
+            const sortedChats = [...chats].sort((a, b) => {
+                const timeA = a.lastMessageTime?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
+                const timeB = b.lastMessageTime?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
+                return timeB - timeA;
+            });
+
+            sortedChats.forEach(chat => {
                 const chatItem = createChatItem(chat);
                 chatsList.appendChild(chatItem);
             });
@@ -279,7 +287,7 @@
                 const otherUser = users.find(u => u.uid === otherUserId);
                 if (otherUser) {
                     document.getElementById('currentChatStatus').textContent = otherUser.status || 'онлайн';
-                    const lastSeen = otherUser.lastSeen?.toDate();
+                    const lastSeen = otherUser.lastSeen?.toDate?.();
                     document.getElementById('currentChatLastSeen').textContent = 
                         otherUser.status === 'online' ? 'в сети' : formatLastSeen(lastSeen);
                 }
@@ -566,7 +574,8 @@
                     closeModal('profileModal');
                 }
             } catch (error) {
-                showNotification('Ошибка обновления профиля');
+                console.error('Ошибка обновления профиля:', error);
+                showNotification('Ошибка обновления профиля: ' + error.message);
             }
         }
 
@@ -727,7 +736,6 @@
     </script>
     
     <style>
-        /* ВСТАВЬТЕ СЮДА ВСЕ ВАШИ CSS СТИЛИ ИЗ ПРЕДЫДУЩЕГО ФАЙЛА */
         :root {
             --primary: #6c5ce7;
             --primary-dark: #5649c0;
